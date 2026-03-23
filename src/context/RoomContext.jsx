@@ -49,6 +49,10 @@ export const RoomProvider = ({ children }) => {
     try {
       workerRef.current = new Worker('/worker.js')
       workerRef.current.addEventListener('message', handleWorkerMessage)
+      workerRef.current.addEventListener('error', (err) => {
+        console.error('Worker error:', err)
+        toast.error('File processing error')
+      })
     } catch (err) {
       console.error('Worker initialization failed:', err)
     }
@@ -62,6 +66,19 @@ export const RoomProvider = ({ children }) => {
       toast.success('Image pasted! Ready to send.')
     })
 
+    // Suppress browser extension errors
+    const originalError = console.error
+    console.error = (...args) => {
+      if (
+        typeof args[0] === 'string' &&
+        (args[0].includes('message port closed') ||
+         args[0].includes('Extension context invalidated'))
+      ) {
+        return // Suppress extension-related errors
+      }
+      originalError.apply(console, args)
+    }
+
     return () => {
       cleanup()
       if (workerRef.current) {
@@ -70,19 +87,25 @@ export const RoomProvider = ({ children }) => {
       if (socketRef.current) {
         socketRef.current.disconnect()
       }
+      console.error = originalError // Restore original console.error
     }
   }, [])
 
   const handleWorkerMessage = (e) => {
-    if (e.data instanceof Blob) {
-      // File assembly complete - show download modal
-      setPendingDownload({
-        blob: e.data,
-        name: fileNameRef.current
-      })
-      setShowDownloadModal(true)
-      setReceivingFile(null)
-      setReceiveProgress(0)
+    try {
+      if (e.data instanceof Blob) {
+        // File assembly complete - show download modal
+        setPendingDownload({
+          blob: e.data,
+          name: fileNameRef.current
+        })
+        setShowDownloadModal(true)
+        setReceivingFile(null)
+        setReceiveProgress(0)
+      }
+    } catch (err) {
+      console.error('Error handling worker message:', err)
+      toast.error('Error processing received file')
     }
   }
 
@@ -177,6 +200,13 @@ export const RoomProvider = ({ children }) => {
 
   const joinRoom = (roomID) => {
     const backendUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8000'
+    
+    // Disconnect existing socket if any
+    if (socketRef.current) {
+      socketRef.current.removeAllListeners()
+      socketRef.current.disconnect()
+    }
+    
     socketRef.current = io(backendUrl, {
       transports: ['polling', 'websocket'],
       reconnection: true,
@@ -193,34 +223,53 @@ export const RoomProvider = ({ children }) => {
 
     socketRef.current.on('connect_error', (error) => {
       console.error('Socket connection error:', error)
+      toast.error('Connection failed. Please check your internet.')
     })
 
     socketRef.current.on('all users', (data) => {
-      if (data.usersInThisRoom && data.usersInThisRoom.length > 0) {
-        peerRef.current = createPeer(data.usersInThisRoom[0], socketRef.current.id)
+      try {
+        if (data.usersInThisRoom && data.usersInThisRoom.length > 0) {
+          peerRef.current = createPeer(data.usersInThisRoom[0], socketRef.current.id)
+        }
+      } catch (err) {
+        console.error('Error handling all users:', err)
       }
     })
 
     socketRef.current.on('usernames', (userList) => {
-      console.log('Received usernames:', userList)
-      setUsers(userList)
-      const myUser = userList.find(u => u.id === socketRef.current.id)
-      if (myUser) {
-        setCurrentUser(myUser)
+      try {
+        console.log('Received usernames:', userList)
+        setUsers(userList)
+        const myUser = userList.find(u => u.id === socketRef.current.id)
+        if (myUser) {
+          setCurrentUser(myUser)
+        }
+      } catch (err) {
+        console.error('Error handling usernames:', err)
       }
     })
 
     socketRef.current.on('user joined', (payload) => {
-      peerRef.current = addPeer(payload.signal, payload.callerID)
+      try {
+        peerRef.current = addPeer(payload.signal, payload.callerID)
+      } catch (err) {
+        console.error('Error handling user joined:', err)
+      }
     })
 
     socketRef.current.on('receiving returned signal', (payload) => {
-      peerRef.current.signal(payload.signal)
-      setConnectionEstablished(true)
+      try {
+        if (peerRef.current) {
+          peerRef.current.signal(payload.signal)
+          setConnectionEstablished(true)
+        }
+      } catch (err) {
+        console.error('Error handling returned signal:', err)
+      }
     })
 
     socketRef.current.on('room full', () => {
-      // Room is full - silently handle
+      toast.error('Room is full!')
     })
 
     socketRef.current.on('user left', () => {
@@ -241,6 +290,13 @@ export const RoomProvider = ({ children }) => {
 
   const joinPublicRoom = (roomID) => {
     const backendUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8000'
+    
+    // Disconnect existing socket if any
+    if (socketRef.current) {
+      socketRef.current.removeAllListeners()
+      socketRef.current.disconnect()
+    }
+    
     socketRef.current = io(backendUrl, {
       transports: ['polling', 'websocket'],
       reconnection: true,
@@ -258,125 +314,146 @@ export const RoomProvider = ({ children }) => {
 
     socketRef.current.on('connect_error', (error) => {
       console.error('Socket connection error:', error)
+      toast.error('Connection failed. Please check your internet.')
     })
 
     socketRef.current.on('all users', (data) => {
-      console.log('Public room users:', data)
-      
-      // Set users list first
-      if (data.usersNamesInThisRoom) {
-        setUsers(data.usersNamesInThisRoom)
-        const myUser = data.usersNamesInThisRoom.find(u => u.id === socketRef.current.id)
-        if (myUser) {
-          setCurrentUser(myUser)
-        }
-      }
-      
-      // Create peer connections to all existing users (mesh network)
-      if (data.usersInThisRoom && data.usersInThisRoom.length > 0) {
-        const peers = []
-        data.usersInThisRoom.forEach(userID => {
-          const peer = createPeerForPublicRoom(userID, socketRef.current.id)
-          peers.push({
-            peerID: userID,
-            peer: peer
-          })
-        })
-        peersRef.current = peers
+      try {
+        console.log('Public room users:', data)
         
-        // Set connection established if we have at least one peer
-        if (peers.length > 0) {
-          setConnectionEstablished(true)
+        // Set users list first
+        if (data.usersNamesInThisRoom) {
+          setUsers(data.usersNamesInThisRoom)
+          const myUser = data.usersNamesInThisRoom.find(u => u.id === socketRef.current.id)
+          if (myUser) {
+            setCurrentUser(myUser)
+          }
         }
-      } else {
-        // No other users yet, but we're in the room
-        setConnectionEstablished(false)
+        
+        // Create peer connections to all existing users (mesh network)
+        if (data.usersInThisRoom && data.usersInThisRoom.length > 0) {
+          const peers = []
+          data.usersInThisRoom.forEach(userID => {
+            const peer = createPeerForPublicRoom(userID, socketRef.current.id)
+            peers.push({
+              peerID: userID,
+              peer: peer
+            })
+          })
+          peersRef.current = peers
+          
+          // Set connection established if we have at least one peer
+          if (peers.length > 0) {
+            setConnectionEstablished(true)
+          }
+        } else {
+          // No other users yet, but we're in the room
+          setConnectionEstablished(false)
+        }
+      } catch (err) {
+        console.error('Error handling all users:', err)
       }
     })
 
     socketRef.current.on('usernames', (userList) => {
-      console.log('Received usernames:', userList)
-      setUsers(userList)
-      const myUser = userList.find(u => u.id === socketRef.current.id)
-      if (myUser) {
-        setCurrentUser(myUser)
+      try {
+        console.log('Received usernames:', userList)
+        setUsers(userList)
+        const myUser = userList.find(u => u.id === socketRef.current.id)
+        if (myUser) {
+          setCurrentUser(myUser)
+        }
+      } catch (err) {
+        console.error('Error handling usernames:', err)
       }
     })
 
     socketRef.current.on('user joined', (payload) => {
-      console.log('User joined:', payload.callerID)
-      // Add new peer to mesh network
-      const peer = addPeerForPublicRoom(payload.signal, payload.callerID)
-      
-      const peerItem = {
-        peerID: payload.callerID,
-        peer: peer
-      }
-      
-      peersRef.current.push(peerItem)
-      
-      // Update connection status
-      setConnectionEstablished(true)
-      
-      // Show username of joined user
-      if (payload.username) {
-        const avatarInfo = getAvatarInfo(payload.username)
-        toast.success(`${avatarInfo.name} joined the room`)
-      } else {
-        toast.success('New user joined the room')
+      try {
+        console.log('User joined:', payload.callerID)
+        // Add new peer to mesh network
+        const peer = addPeerForPublicRoom(payload.signal, payload.callerID)
+        
+        const peerItem = {
+          peerID: payload.callerID,
+          peer: peer
+        }
+        
+        peersRef.current.push(peerItem)
+        
+        // Update connection status
+        setConnectionEstablished(true)
+        
+        // Show username of joined user
+        if (payload.username) {
+          const avatarInfo = getAvatarInfo(payload.username)
+          toast.success(`${avatarInfo.name} joined the room`)
+        } else {
+          toast.success('New user joined the room')
+        }
+      } catch (err) {
+        console.error('Error handling user joined:', err)
       }
     })
 
     socketRef.current.on('receiving returned signal', (payload) => {
-      console.log('Receiving returned signal from:', payload.id)
-      // Find the peer and signal it
-      const item = peersRef.current.find(p => p.peerID === payload.id)
-      if (item && item.peer) {
-        item.peer.signal(payload.signal)
-        setConnectionEstablished(true)
+      try {
+        console.log('Receiving returned signal from:', payload.id)
+        // Find the peer and signal it
+        const item = peersRef.current.find(p => p.peerID === payload.id)
+        if (item && item.peer) {
+          item.peer.signal(payload.signal)
+          setConnectionEstablished(true)
+        }
+      } catch (err) {
+        console.error('Error handling returned signal:', err)
       }
     })
 
     socketRef.current.on('room full', () => {
-      // Room is full - silently handle
+      toast.error('Room is full!')
     })
 
     socketRef.current.on('user left', (payload) => {
-      let username = 'A user'
-      
-      // Use username from payload if available
-      if (payload && payload.username) {
-        const avatarInfo = getAvatarInfo(payload.username)
-        username = avatarInfo.name
-      } else if (payload && payload.userID) {
-        // Fallback: find from users list
-        const leftUser = users.find(u => u.id === payload.userID)
-        if (leftUser && leftUser.name) {
-          const avatarInfo = getAvatarInfo(leftUser.name)
+      try {
+        let username = 'A user'
+        
+        // Use username from payload if available
+        if (payload && payload.username) {
+          const avatarInfo = getAvatarInfo(payload.username)
           username = avatarInfo.name
-        }
-      }
-      
-      toast(`${username} left the room`)
-      
-      // Remove peer from mesh
-      if (payload && payload.userID) {
-        peersRef.current = peersRef.current.filter(p => {
-          if (p.peerID === payload.userID) {
-            p.peer.destroy()
-            return false
+        } else if (payload && payload.userID) {
+          // Fallback: find from users list
+          const leftUser = users.find(u => u.id === payload.userID)
+          if (leftUser && leftUser.name) {
+            const avatarInfo = getAvatarInfo(leftUser.name)
+            username = avatarInfo.name
           }
-          return true
-        })
-      }
-      
-      // Update connection status
-      if (peersRef.current.length === 0) {
-        setConnectionEstablished(false)
-      }
-      
-      if (pendingOpRef.current) {
-        toast.error('Transfer interrupted!')
+        }
+        
+        toast(`${username} left the room`)
+        
+        // Remove peer from mesh
+        if (payload && payload.userID) {
+          peersRef.current = peersRef.current.filter(p => {
+            if (p.peerID === payload.userID) {
+              if (p.peer) p.peer.destroy()
+              return false
+            }
+            return true
+          })
+        }
+        
+        // Update connection status
+        if (peersRef.current.length === 0) {
+          setConnectionEstablished(false)
+        }
+        
+        if (pendingOpRef.current) {
+          toast.error('Transfer interrupted!')
+        }
+      } catch (err) {
+        console.error('Error handling user left:', err)
       }
     })
   }
