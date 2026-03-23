@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react'
 import io from 'socket.io-client'
-import Peer from 'simple-peer'
+import SimplePeer from 'simple-peer'
 import streamSaver from 'streamsaver'
 import axios from 'axios'
 import { throttle } from 'lodash'
@@ -8,6 +8,9 @@ import toast, { Toaster } from 'react-hot-toast'
 import { getPublicIP } from '../utils/ipDetection'
 import { setupClipboardPaste } from '../utils/clipboardPaste'
 import { getAvatarInfo } from '../utils/avatarGen'
+
+// Ensure Peer is properly imported
+const Peer = SimplePeer.default || SimplePeer
 
 const RoomContext = createContext()
 
@@ -760,6 +763,15 @@ export const RoomProvider = ({ children }) => {
 
   const createPeerForPublicRoom = (userToSignal, callerID) => {
     try {
+      // Validate Peer constructor
+      if (!Peer || typeof Peer !== 'function') {
+        console.error('Peer constructor is not available:', Peer)
+        toast.error('WebRTC not available. Please refresh the page.')
+        return null
+      }
+
+      console.log('Creating peer for:', userToSignal, 'from:', callerID)
+      
       const peer = new Peer({
         initiator: true,
         trickle: false,
@@ -797,12 +809,23 @@ export const RoomProvider = ({ children }) => {
       return peer
     } catch (err) {
       console.error('Error creating peer:', err)
+      console.error('Peer constructor:', Peer)
+      console.error('Error stack:', err.stack)
       return null
     }
   }
 
   const addPeerForPublicRoom = (incomingSignal, callerID) => {
     try {
+      // Validate Peer constructor
+      if (!Peer || typeof Peer !== 'function') {
+        console.error('Peer constructor is not available:', Peer)
+        toast.error('WebRTC not available. Please refresh the page.')
+        return null
+      }
+
+      console.log('Adding peer from:', callerID)
+      
       const peer = new Peer({
         initiator: false,
         trickle: false,
@@ -844,6 +867,8 @@ export const RoomProvider = ({ children }) => {
       return peer
     } catch (err) {
       console.error('Error adding peer:', err)
+      console.error('Peer constructor:', Peer)
+      console.error('Error stack:', err.stack)
       return null
     }
   }
