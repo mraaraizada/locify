@@ -1,19 +1,20 @@
 # Python Backend Requirements for Locify File Sharing
 
 # Web Framework
-Flask==2.3.0
+Flask==3.0.0
 Flask-CORS==4.0.0
+Werkzeug==3.0.1
 
 # WebSocket Support
 Flask-SocketIO==5.3.6
 python-socketio==5.11.0
 python-engineio==4.9.0
-eventlet==0.33.3
+
+# Async support
+eventlet==0.35.2
+greenlet==3.0.3
+dnspython==2.6.1
 
 # Database (Optional - MongoDB)
 pymongo==4.6.0
 python-dotenv==1.0.0
-
-# Additional dependencies
-Werkzeug==2.3.0
-greenlet==3.0.3
