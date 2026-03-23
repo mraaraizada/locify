@@ -523,18 +523,32 @@ export const RoomProvider = ({ children }) => {
       activePeersCount: activePeers.length,
       peersRefLength: peersRef.current.length,
       hasPeerRef: !!peerRef.current,
-      connectionEstablished 
+      connectionEstablished,
+      connectedPeers: activePeers.filter(p => p.peer?.connected).length
     })
     
-    if (activePeers.length === 0 || !connectionEstablished) {
+    // Check for actually connected peers instead of just connectionEstablished flag
+    const connectedPeers = activePeers.filter(p => p.peer && p.peer.connected)
+    
+    if (connectedPeers.length === 0) {
       toast.error('No peer connected! Please wait for another user to join.')
+      console.error('No connected peers found!', {
+        activePeers: activePeers.length,
+        connectedPeers: connectedPeers.length,
+        peerStates: activePeers.map(p => ({ 
+          id: p.peerID, 
+          exists: !!p.peer, 
+          connected: p.peer?.connected,
+          destroyed: p.peer?.destroyed 
+        }))
+      })
       return
     }
 
-    // If no target users specified, send to all
-    let peersToSendTo = activePeers
+    // If no target users specified, send to all connected peers
+    let peersToSendTo = connectedPeers
     if (targetUsers && targetUsers.length > 0) {
-      peersToSendTo = activePeers.filter(item => {
+      peersToSendTo = connectedPeers.filter(item => {
         const matches = targetUsers.includes(item.peerID)
         console.log('Checking peer:', { peerID: item.peerID, targetUsers, matches })
         return matches
@@ -543,13 +557,13 @@ export const RoomProvider = ({ children }) => {
       console.log('Filtered peers:', { 
         targetUsers, 
         peersToSendToCount: peersToSendTo.length,
-        allPeers: activePeers.map(p => p.peerID),
+        allPeers: connectedPeers.map(p => p.peerID),
         connectedPeers: peersToSendTo.map(p => ({ id: p.peerID, connected: p.peer?.connected }))
       })
       
       if (peersToSendTo.length === 0) {
         toast.error('Selected users are not connected!')
-        console.error('No matching peers found!', { targetUsers, availablePeers: activePeers.map(p => p.peerID) })
+        console.error('No matching peers found!', { targetUsers, availablePeers: connectedPeers.map(p => p.peerID) })
         return
       }
     }
