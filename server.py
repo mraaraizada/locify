@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Vegh File Sharing - Python Backend Server
+Locify File Sharing - Python Backend Server
 P2P File Sharing with WebRTC and Socket.io
 """
 
@@ -42,7 +42,7 @@ socketio = SocketIO(
         "http://localhost:5174",
         "http://localhost:5175"
     ],
-    async_mode='threading',
+    async_mode='eventlet',
     logger=False,
     engineio_logger=False,
     ping_timeout=60,
@@ -335,7 +335,7 @@ def handle_returning_signal(data):
 if __name__ == '__main__':
     port = int(os.getenv('BACKEND_PORT', 8000))
     print(f'\n{"="*50}')
-    print(f'🚀 Vegh Python Backend Server')
+    print(f'🚀 Locify Python Backend Server')
     print(f'{"="*50}')
     print(f'✓ Server starting on port {port}')
     print(f'✓ CORS enabled for: localhost:3000, localhost:5173, localhost:5174, localhost:5175')
