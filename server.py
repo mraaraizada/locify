@@ -22,14 +22,26 @@ app.config['SECRET_KEY'] = os.getenv('ADMIN_COOKIE_PASS', 'secret!')
 # Enable CORS
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"]
+        "origins": [
+            "https://locify-sigma.vercel.app",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://localhost:5175"
+        ]
     }
 })
 
 # Initialize Socket.IO with compatibility for Socket.IO v2 clients
 socketio = SocketIO(
     app,
-    cors_allowed_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
+    cors_allowed_origins=[
+        "https://locify-sigma.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175"
+    ],
     async_mode='eventlet',
     logger=False,
     engineio_logger=False,
