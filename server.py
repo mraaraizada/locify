@@ -33,7 +33,7 @@ CORS(app, resources={
 })
 
 # Initialize Socket.IO with compatibility for Socket.IO v2 clients
-socketio = SocketIO(
+    socketio = SocketIO(
     app,
     cors_allowed_origins=[
         "https://locify-sigma.vercel.app",
@@ -42,7 +42,7 @@ socketio = SocketIO(
         "http://localhost:5174",
         "http://localhost:5175"
     ],
-    async_mode='eventlet',
+    async_mode='gevent',
     logger=False,
     engineio_logger=False,
     ping_timeout=60,
@@ -346,5 +346,5 @@ if __name__ == '__main__':
         app,
         host='0.0.0.0',
         port=port,
-        debug=True
+        debug=False
     )
