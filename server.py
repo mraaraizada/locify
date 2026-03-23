@@ -42,11 +42,13 @@ socketio = SocketIO(
         "http://localhost:5174",
         "http://localhost:5175"
     ],
-    async_mode='eventlet',
-    logger=False,
-    engineio_logger=False,
+    async_mode='threading',
+    logger=True,
+    engineio_logger=True,
     ping_timeout=60,
-    ping_interval=25
+    ping_interval=25,
+    allow_upgrades=True,
+    transports=['polling', 'websocket']
 )
 
 # In-memory storage for rooms and users
