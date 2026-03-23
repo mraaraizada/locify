@@ -12,6 +12,7 @@ python-engineio==4.9.0
 
 # Production WSGI Server
 gunicorn==21.2.0
+eventlet==0.36.1
 
 # Database (Optional - MongoDB)
 pymongo==4.6.0
@@ -19,5 +20,3 @@ python-dotenv==1.0.0
 
 # Additional dependencies
 dnspython==2.6.1
-simple-websocket==1.0.0
-wsproto==1.2.0
