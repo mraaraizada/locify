@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: locify-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    envVars:
+      - key: BACKEND_PORT
+        value: 10000
+      - key: ADMIN_COOKIE_PASS
+        generateValue: true
+      - key: MONGO_URL
+        value: test

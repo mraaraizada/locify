@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+  }
+  .glass-dark {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+/* Avatar Component Styles */
+.peer-avatar-you {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding: 0;
+}
+
+.peer-avatar-you .avatar-img {
+  width: calc(69px + 2vmin);
+  height: calc(69px + 2vmin);
+  margin: 10px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.peer-avatar-you h2 {
+  font-size: calc(15px + 1vmin);
+  text-align: center;
+  margin: 5px 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.user-info-you {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.flex-col-center-you {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.avatar-fallback {
+  width: calc(69px + 2vmin);
+  height: calc(69px + 2vmin);
+  margin: 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: calc(24px + 1vmin);
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Small Avatar for Other Users */
+.avatar-small .peer-avatar-you .avatar-img {
+  width: 48px;
+  height: 48px;
+  margin: 6px;
+}
+
+.avatar-small .peer-avatar-you h2 {
+  font-size: 12px;
+  margin: 3px 6px;
+}
+
+.avatar-small .user-info-you {
+  margin-top: 3px;
+}
+
+.avatar-small .avatar-fallback {
+  width: 48px;
+  height: 48px;
+  margin: 6px;
+  font-size: 18px;
+}
+
+@media only screen and (max-width: 768px) {
+  .peer-avatar-you {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .user-info-you {
+    justify-content: center;
+    align-items: center;
+  }
+  .flex-col-center-you {
+    justify-content: center;
+    flex-direction: column;
+  }
+  .peer-avatar-you h2 {
+    text-align: center;
+  }
+}
