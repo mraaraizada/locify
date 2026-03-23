@@ -321,8 +321,14 @@ export const RoomProvider = ({ children }) => {
       try {
         console.log('Public room users:', data)
         
+        // Validate data structure
+        if (!data || typeof data !== 'object') {
+          console.error('Invalid data received in all users event')
+          return
+        }
+        
         // Set users list first
-        if (data.usersNamesInThisRoom) {
+        if (data.usersNamesInThisRoom && Array.isArray(data.usersNamesInThisRoom)) {
           setUsers(data.usersNamesInThisRoom)
           const myUser = data.usersNamesInThisRoom.find(u => u.id === socketRef.current.id)
           if (myUser) {
@@ -331,15 +337,29 @@ export const RoomProvider = ({ children }) => {
         }
         
         // Create peer connections to all existing users (mesh network)
-        if (data.usersInThisRoom && data.usersInThisRoom.length > 0) {
+        if (data.usersInThisRoom && Array.isArray(data.usersInThisRoom) && data.usersInThisRoom.length > 0) {
           const peers = []
+          
           data.usersInThisRoom.forEach(userID => {
-            const peer = createPeerForPublicRoom(userID, socketRef.current.id)
-            peers.push({
-              peerID: userID,
-              peer: peer
-            })
+            try {
+              if (!userID || typeof userID !== 'string') {
+                console.warn('Invalid userID:', userID)
+                return
+              }
+              
+              const peer = createPeerForPublicRoom(userID, socketRef.current.id)
+              
+              if (peer) {
+                peers.push({
+                  peerID: userID,
+                  peer: peer
+                })
+              }
+            } catch (peerErr) {
+              console.error('Error creating peer for user:', userID, peerErr)
+            }
           })
+          
           peersRef.current = peers
           
           // Set connection established if we have at least one peer
@@ -352,6 +372,7 @@ export const RoomProvider = ({ children }) => {
         }
       } catch (err) {
         console.error('Error handling all users:', err)
+        toast.error('Error connecting to room')
       }
     })
 
@@ -738,68 +759,93 @@ export const RoomProvider = ({ children }) => {
   }
 
   const createPeerForPublicRoom = (userToSignal, callerID) => {
-    const peer = new Peer({
-      initiator: true,
-      trickle: false,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478' },
-          { urls: 'stun:stun.services.mozilla.com' },
-        ]
-      }
-    })
+    try {
+      const peer = new Peer({
+        initiator: true,
+        trickle: false,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' },
+            { urls: 'stun:stun.services.mozilla.com' },
+          ]
+        }
+      })
 
-    peer.on('signal', (signal) => {
-      console.log('Sending signal to:', userToSignal)
-      socketRef.current.emit('sending signal', { userToSignal, callerID, signal })
-    })
+      peer.on('signal', (signal) => {
+        try {
+          console.log('Sending signal to:', userToSignal)
+          if (socketRef.current && socketRef.current.connected) {
+            socketRef.current.emit('sending signal', { userToSignal, callerID, signal })
+          }
+        } catch (err) {
+          console.error('Error sending signal:', err)
+        }
+      })
 
-    peer.on('connect', () => {
-      console.log('Peer connected in public room to:', userToSignal)
-      setConnectionEstablished(true)
-    })
+      peer.on('connect', () => {
+        console.log('Peer connected in public room to:', userToSignal)
+        setConnectionEstablished(true)
+      })
 
-    peer.on('error', (err) => {
-      console.error('Peer error:', err)
-    })
+      peer.on('error', (err) => {
+        console.error('Peer error for', userToSignal, ':', err)
+      })
 
-    peer.on('data', handleReceivingData)
+      peer.on('data', handleReceivingData)
 
-    return peer
+      return peer
+    } catch (err) {
+      console.error('Error creating peer:', err)
+      return null
+    }
   }
 
   const addPeerForPublicRoom = (incomingSignal, callerID) => {
-    const peer = new Peer({
-      initiator: false,
-      trickle: false,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478' },
-          { urls: 'stun:stun.services.mozilla.com' },
-        ]
+    try {
+      const peer = new Peer({
+        initiator: false,
+        trickle: false,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' },
+            { urls: 'stun:stun.services.mozilla.com' },
+          ]
+        }
+      })
+
+      peer.on('signal', (signal) => {
+        try {
+          console.log('Returning signal to:', callerID)
+          if (socketRef.current && socketRef.current.connected) {
+            socketRef.current.emit('returning signal', { signal, callerID })
+          }
+        } catch (err) {
+          console.error('Error returning signal:', err)
+        }
+      })
+
+      peer.on('connect', () => {
+        console.log('Peer connected in public room from:', callerID)
+        setConnectionEstablished(true)
+      })
+
+      peer.on('error', (err) => {
+        console.error('Peer error from', callerID, ':', err)
+      })
+
+      peer.on('data', handleReceivingData)
+      
+      if (incomingSignal) {
+        peer.signal(incomingSignal)
       }
-    })
 
-    peer.on('signal', (signal) => {
-      console.log('Returning signal to:', callerID)
-      socketRef.current.emit('returning signal', { signal, callerID })
-    })
-
-    peer.on('connect', () => {
-      console.log('Peer connected in public room from:', callerID)
-      setConnectionEstablished(true)
-    })
-
-    peer.on('error', (err) => {
-      console.error('Peer error:', err)
-    })
-
-    peer.on('data', handleReceivingData)
-    peer.signal(incomingSignal)
-
-    return peer
+      return peer
+    } catch (err) {
+      console.error('Error adding peer:', err)
+      return null
+    }
   }
 
   const leaveRoom = () => {
