@@ -57,9 +57,12 @@ export function getAvatarInfo(index) {
   const safeIndex = ((index - 1) % avatars.length + avatars.length) % avatars.length
   const avatar = avatars[safeIndex]
   
+  // Import the avatar dynamically
+  const avatarPath = new URL(`../assets/avatars/${avatar.id}-${avatar.name.toLowerCase().replace(/\s+/g, '')}.svg`, import.meta.url).href
+  
   return {
     name: avatar.name,
-    path: `/src/assets/avatars/${avatar.id}-${avatar.name.toLowerCase().replace(/\s+/g, '')}.svg`,
+    path: avatarPath,
     initial: avatar.name.charAt(0),
     id: avatar.id
   }
