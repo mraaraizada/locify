@@ -1,28 +1,13 @@
-// Simple wrapper for simple-peer v9.6.2
-// This version doesn't have the getUserMedia.call() bug
+// Custom WebRTC DataChannel implementation
+// Replaces simple-peer which has getUserMedia bugs
 
 // SSR Protection
 if (typeof window === 'undefined') {
-  throw new Error('simple-peer can only be used in browser environment')
+  throw new Error('WebRTC can only be used in browser environment')
 }
 
-// Basic polyfill just in case
-if (typeof navigator !== 'undefined' && !navigator.mediaDevices) {
-  navigator.mediaDevices = {
-    getUserMedia: function() {
-      return Promise.reject(new Error('getUserMedia not available'))
-    },
-    enumerateDevices: function() {
-      return Promise.resolve([])
-    },
-    getSupportedConstraints: function() {
-      return {}
-    }
-  }
-}
+// Import our custom DataChannel implementation
+import DataChannelPeer from './DataChannelPeer'
 
-// Import simple-peer
-import SimplePeer from 'simple-peer'
-
-// Export directly - v9.6.2 works fine for data-only connections
-export default SimplePeer
+// Export as default (drop-in replacement for simple-peer)
+export default DataChannelPeer
