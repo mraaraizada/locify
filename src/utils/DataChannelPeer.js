@@ -122,30 +122,38 @@ export default class DataChannelPeer {
   }
   
   async signal(data) {
+    if (this.destroyed) return
+    
     try {
       if (data.type === 'offer') {
-        await this._pc.setRemoteDescription(new RTCSessionDescription(data))
-        const answer = await this._pc.createAnswer()
-        await this._pc.setLocalDescription(answer)
-        
-        if (!this.trickle) {
-          await new Promise((resolve) => {
-            if (this._pc.iceGatheringState === 'complete') {
-              resolve()
-            } else {
-              this._pc.onicegatheringstatechange = () => {
-                if (this._pc.iceGatheringState === 'complete') {
-                  resolve()
+        // Only set remote description if we don't already have one
+        if (this._pc.signalingState === 'stable' || this._pc.signalingState === 'have-local-offer') {
+          await this._pc.setRemoteDescription(new RTCSessionDescription(data))
+          const answer = await this._pc.createAnswer()
+          await this._pc.setLocalDescription(answer)
+          
+          if (!this.trickle) {
+            await new Promise((resolve) => {
+              if (this._pc.iceGatheringState === 'complete') {
+                resolve()
+              } else {
+                this._pc.onicegatheringstatechange = () => {
+                  if (this._pc.iceGatheringState === 'complete') {
+                    resolve()
+                  }
                 }
               }
-            }
-          })
-          this._emit('signal', this._pc.localDescription)
-        } else {
-          this._emit('signal', answer)
+            })
+            this._emit('signal', this._pc.localDescription)
+          } else {
+            this._emit('signal', answer)
+          }
         }
       } else if (data.type === 'answer') {
-        await this._pc.setRemoteDescription(new RTCSessionDescription(data))
+        // Only set remote description if we're in the right state
+        if (this._pc.signalingState === 'have-local-offer') {
+          await this._pc.setRemoteDescription(new RTCSessionDescription(data))
+        }
       } else if (data.type === 'candidate' || data.candidate) {
         const candidate = data.candidate || data
         if (this._pc.remoteDescription) {
