@@ -1,6 +1,11 @@
 // Wrapper for simple-peer to handle data-only connections
 // This ensures getUserMedia is available before simple-peer initializes
 
+// SSR Protection - only run in browser
+if (typeof window === 'undefined') {
+  throw new Error('simple-peer can only be used in browser environment')
+}
+
 // Comprehensive polyfill for getUserMedia
 if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
   // Create a mock getUserMedia that returns a rejected promise
@@ -52,6 +57,7 @@ if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
 }
 
 // Now import simple-peer after polyfills are in place
-import Peer from 'simple-peer'
+import SimplePeer from 'simple-peer'
 
-export default Peer
+// Export default (NOT as namespace)
+export default SimplePeer

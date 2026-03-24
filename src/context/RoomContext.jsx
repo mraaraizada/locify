@@ -347,6 +347,14 @@ export const RoomProvider = ({ children }) => {
                 return
               }
               
+              // ✅ PREVENT DUPLICATE: Check if peer already exists
+              const existingPeer = peersRef.current.find(p => p.peerID === userID)
+              if (existingPeer) {
+                console.log('Peer already exists for:', userID)
+                peers.push(existingPeer)
+                return
+              }
+              
               const peer = createPeerForPublicRoom(userID, socketRef.current.id)
               
               if (peer) {
@@ -362,10 +370,8 @@ export const RoomProvider = ({ children }) => {
           
           peersRef.current = peers
           
-          // Set connection established if we have at least one peer
-          if (peers.length > 0) {
-            setConnectionEstablished(true)
-          }
+          // Don't set connectionEstablished here - wait for peer.on('connect') event
+          console.log('Created', peers.length, 'peer(s), waiting for connections...')
         } else {
           // No other users yet, but we're in the room
           setConnectionEstablished(false)
@@ -770,10 +776,22 @@ export const RoomProvider = ({ children }) => {
 
   const createPeerForPublicRoom = (userToSignal, callerID) => {
     try {
+      // ✅ SSR Protection
+      if (typeof window === 'undefined') {
+        console.error('Cannot create peer in SSR environment')
+        return null
+      }
+      
       // Validate Peer constructor
       if (!Peer || typeof Peer !== 'function') {
         console.error('Peer constructor is not available:', Peer)
         toast.error('WebRTC not available. Please refresh the page.')
+        return null
+      }
+      
+      // Validate parameters
+      if (!userToSignal || !callerID) {
+        console.error('Invalid parameters for peer creation:', { userToSignal, callerID })
         return null
       }
 
@@ -801,6 +819,8 @@ export const RoomProvider = ({ children }) => {
           console.log('Sending signal to:', userToSignal)
           if (socketRef.current && socketRef.current.connected) {
             socketRef.current.emit('sending signal', { userToSignal, callerID, signal })
+          } else {
+            console.error('Socket not connected, cannot send signal')
           }
         } catch (err) {
           console.error('Error sending signal:', err)
@@ -808,12 +828,18 @@ export const RoomProvider = ({ children }) => {
       })
 
       peer.on('connect', () => {
-        console.log('Peer connected in public room to:', userToSignal)
+        console.log('✓ Peer connected in public room to:', userToSignal)
         setConnectionEstablished(true)
+        toast.success('Connected to peer!')
+      })
+
+      peer.on('close', () => {
+        console.log('Peer connection closed:', userToSignal)
       })
 
       peer.on('error', (err) => {
         console.error('Peer error for', userToSignal, ':', err)
+        toast.error('Peer connection error: ' + err.message)
       })
 
       peer.on('data', handleReceivingData)
@@ -829,10 +855,22 @@ export const RoomProvider = ({ children }) => {
 
   const addPeerForPublicRoom = (incomingSignal, callerID) => {
     try {
+      // ✅ SSR Protection
+      if (typeof window === 'undefined') {
+        console.error('Cannot create peer in SSR environment')
+        return null
+      }
+      
       // Validate Peer constructor
       if (!Peer || typeof Peer !== 'function') {
         console.error('Peer constructor is not available:', Peer)
         toast.error('WebRTC not available. Please refresh the page.')
+        return null
+      }
+      
+      // Validate parameters
+      if (!incomingSignal || !callerID) {
+        console.error('Invalid parameters for peer creation:', { incomingSignal, callerID })
         return null
       }
 
@@ -860,6 +898,8 @@ export const RoomProvider = ({ children }) => {
           console.log('Returning signal to:', callerID)
           if (socketRef.current && socketRef.current.connected) {
             socketRef.current.emit('returning signal', { signal, callerID })
+          } else {
+            console.error('Socket not connected, cannot return signal')
           }
         } catch (err) {
           console.error('Error returning signal:', err)
@@ -867,18 +907,26 @@ export const RoomProvider = ({ children }) => {
       })
 
       peer.on('connect', () => {
-        console.log('Peer connected in public room from:', callerID)
+        console.log('✓ Peer connected in public room from:', callerID)
         setConnectionEstablished(true)
+        toast.success('Connected to peer!')
+      })
+
+      peer.on('close', () => {
+        console.log('Peer connection closed:', callerID)
       })
 
       peer.on('error', (err) => {
         console.error('Peer error from', callerID, ':', err)
+        toast.error('Peer connection error: ' + err.message)
       })
 
       peer.on('data', handleReceivingData)
       
       if (incomingSignal) {
         peer.signal(incomingSignal)
+      } else {
+        console.error('No incoming signal provided for peer from:', callerID)
       }
 
       return peer
