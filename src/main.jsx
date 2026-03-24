@@ -6,6 +6,27 @@ window.Buffer = Buffer
 window.process = process
 window.global = globalThis
 
+// Polyfill for getUserMedia to prevent errors in data-only peer connections
+// This MUST be set before simple-peer is imported anywhere
+if (typeof navigator !== 'undefined') {
+  if (!navigator.mediaDevices) {
+    navigator.mediaDevices = {}
+  }
+  
+  if (!navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia = function() {
+      return Promise.reject(new Error('getUserMedia is not implemented in this browser'))
+    }
+  }
+  
+  // Also polyfill the older API if needed
+  if (!navigator.getUserMedia) {
+    navigator.getUserMedia = function() {
+      return Promise.reject(new Error('getUserMedia is not implemented in this browser'))
+    }
+  }
+}
+
 // Now import util after process is available
 import util from 'util'
 window.util = util
