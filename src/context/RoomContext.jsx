@@ -467,17 +467,10 @@ export const RoomProvider = ({ children }) => {
         console.error('Error handling returned signal:', err)
       }
     })
-        if (item && item.peer) {
-          item.peer.signal(payload.signal)
-          setConnectionEstablished(true)
-        }
-      } catch (err) {
-        console.error('Error handling returned signal:', err)
-      }
-    })
 
     socketRef.current.on('room full', () => {
       toast.error('Room is full!')
+    })
     })
 
     socketRef.current.on('user left', (payload) => {
