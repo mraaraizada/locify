@@ -142,6 +142,7 @@ function createPeer(userToSignal, callerID) {
     const peer = new Peer({
         initiator: true,
         trickle: false,
+        streams: [], // Explicitly set empty streams array for data-only connection
         config:{iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:global.stun.twilio.com:3478' },
@@ -171,6 +172,7 @@ function addPeer(incomingSignal, callerID) {
     const peer = new Peer({
         initiator: false,
         trickle: false,
+        streams: [], // Explicitly set empty streams array for data-only connection
         config:{iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:global.stun.twilio.com:3478' },
