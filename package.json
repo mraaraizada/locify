@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "postinstall": "node patch-simple-peer.cjs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "axios": "^1.13.6",
@@ -21,7 +20,7 @@
     "react-dropzone": "^14.2.3",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^6.26.2",
-    "simple-peer": "9.7.2",
+    "simple-peer": "9.6.2",
     "socket.io-client": "^4.5.0",
     "streamsaver": "^2.0.6",
     "util": "^0.12.5"
