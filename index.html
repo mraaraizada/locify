@@ -5,7 +5,10 @@
     <link rel="icon" type="image/png" href="/logo.png" />
     <link rel="apple-touch-icon" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Locify</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Locify — Instant P2P File Sharing</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -18,7 +21,7 @@
         
         // Create a mock getUserMedia that returns a rejected promise
         var mockGetUserMedia = function(constraints) {
-          return Promise.reject(new Error('getUserMedia is not available'));
+          return Promise.reject(new DOMException('getUserMedia is not available', 'NotAllowedError'));
         };
         
         // Ensure navigator.mediaDevices exists
@@ -26,9 +29,13 @@
           navigator.mediaDevices = {};
         }
         
-        // Set getUserMedia on mediaDevices
+        // Set getUserMedia on mediaDevices with Object.defineProperty for proper binding
         if (!navigator.mediaDevices.getUserMedia) {
-          navigator.mediaDevices.getUserMedia = mockGetUserMedia;
+          Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+            value: mockGetUserMedia,
+            writable: true,
+            configurable: true
+          });
         }
         
         // Also set the older prefixed versions

@@ -397,9 +397,28 @@ export const RoomProvider = ({ children }) => {
 
     socketRef.current.on('user joined', (payload) => {
       try {
-        console.log('User joined:', payload.callerID)
+        console.log('User joined:', payload.callerID, 'with signal:', !!payload.signal)
+        
+        // Validate payload
+        if (!payload.signal || !payload.callerID) {
+          console.error('Invalid user joined payload:', payload)
+          return
+        }
+        
+        // Check for duplicate
+        const existingPeer = peersRef.current.find(p => p.peerID === payload.callerID)
+        if (existingPeer) {
+          console.log('Peer already exists for:', payload.callerID)
+          return
+        }
+        
         // Add new peer to mesh network
         const peer = addPeerForPublicRoom(payload.signal, payload.callerID)
+        
+        if (!peer) {
+          console.error('Failed to create peer for:', payload.callerID)
+          return
+        }
         
         const peerItem = {
           peerID: payload.callerID,
@@ -408,8 +427,8 @@ export const RoomProvider = ({ children }) => {
         
         peersRef.current.push(peerItem)
         
-        // Update connection status
-        setConnectionEstablished(true)
+        // Don't set connectionEstablished here - wait for peer.on('connect')
+        console.log('Added peer, total peers:', peersRef.current.length)
         
         // Show username of joined user
         if (payload.username) {
@@ -425,9 +444,29 @@ export const RoomProvider = ({ children }) => {
 
     socketRef.current.on('receiving returned signal', (payload) => {
       try {
-        console.log('Receiving returned signal from:', payload.id)
+        console.log('Receiving returned signal from:', payload.id, 'signal:', !!payload.signal)
+        
+        // Validate payload
+        if (!payload.signal || !payload.id) {
+          console.error('Invalid returned signal payload:', payload)
+          return
+        }
+        
         // Find the peer and signal it
         const item = peersRef.current.find(p => p.peerID === payload.id)
+        
+        if (item && item.peer) {
+          console.log('Found peer, signaling back...')
+          item.peer.signal(payload.signal)
+          // Don't set connectionEstablished here - wait for peer.on('connect')
+        } else {
+          console.error('Peer not found for returned signal from:', payload.id)
+          console.log('Available peers:', peersRef.current.map(p => p.peerID))
+        }
+      } catch (err) {
+        console.error('Error handling returned signal:', err)
+      }
+    })
         if (item && item.peer) {
           item.peer.signal(payload.signal)
           setConnectionEstablished(true)
