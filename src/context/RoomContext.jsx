@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react'
 import io from 'socket.io-client'
-import SimplePeer from 'simple-peer'
+import Peer from 'simple-peer'
 import streamSaver from 'streamsaver'
 import axios from 'axios'
 import { throttle } from 'lodash'
@@ -8,9 +8,6 @@ import toast, { Toaster } from 'react-hot-toast'
 import { getPublicIP } from '../utils/ipDetection'
 import { setupClipboardPaste } from '../utils/clipboardPaste'
 import { getAvatarInfo } from '../utils/avatarGen'
-
-// Ensure Peer is properly imported
-const Peer = SimplePeer.default || SimplePeer
 
 const RoomContext = createContext()
 
@@ -486,6 +483,7 @@ export const RoomProvider = ({ children }) => {
     const peer = new Peer({
       initiator: true,
       trickle: false,
+      streams: [], // Explicitly set empty streams array for data-only connection
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
@@ -517,6 +515,7 @@ export const RoomProvider = ({ children }) => {
     const peer = new Peer({
       initiator: false,
       trickle: false,
+      streams: [], // Explicitly set empty streams array for data-only connection
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
@@ -775,6 +774,7 @@ export const RoomProvider = ({ children }) => {
       const peer = new Peer({
         initiator: true,
         trickle: false,
+        streams: [], // Explicitly set empty streams array for data-only connection
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
@@ -829,6 +829,7 @@ export const RoomProvider = ({ children }) => {
       const peer = new Peer({
         initiator: false,
         trickle: false,
+        streams: [], // Explicitly set empty streams array for data-only connection
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
