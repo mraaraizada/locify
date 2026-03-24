@@ -471,7 +471,6 @@ export const RoomProvider = ({ children }) => {
     socketRef.current.on('room full', () => {
       toast.error('Room is full!')
     })
-    })
 
     socketRef.current.on('user left', (payload) => {
       try {
