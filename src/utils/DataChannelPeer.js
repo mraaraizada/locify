@@ -126,38 +126,51 @@ export default class DataChannelPeer {
     
     try {
       if (data.type === 'offer') {
-        // Only set remote description if we don't already have one
-        if (this._pc.signalingState === 'stable' || this._pc.signalingState === 'have-local-offer') {
-          await this._pc.setRemoteDescription(new RTCSessionDescription(data))
-          const answer = await this._pc.createAnswer()
-          await this._pc.setLocalDescription(answer)
-          
-          if (!this.trickle) {
-            await new Promise((resolve) => {
-              if (this._pc.iceGatheringState === 'complete') {
-                resolve()
-              } else {
-                this._pc.onicegatheringstatechange = () => {
-                  if (this._pc.iceGatheringState === 'complete') {
-                    resolve()
-                  }
+        // Only process offer if we're in the right state
+        if (this._pc.signalingState !== 'stable' && this._pc.signalingState !== 'have-remote-offer') {
+          console.warn('Ignoring offer in state:', this._pc.signalingState)
+          return
+        }
+        
+        await this._pc.setRemoteDescription(new RTCSessionDescription(data))
+        const answer = await this._pc.createAnswer()
+        await this._pc.setLocalDescription(answer)
+        
+        if (!this.trickle) {
+          await new Promise((resolve) => {
+            if (this._pc.iceGatheringState === 'complete') {
+              resolve()
+            } else {
+              const timeout = setTimeout(() => resolve(), 3000) // 3s timeout
+              this._pc.onicegatheringstatechange = () => {
+                if (this._pc.iceGatheringState === 'complete') {
+                  clearTimeout(timeout)
+                  resolve()
                 }
               }
-            })
-            this._emit('signal', this._pc.localDescription)
-          } else {
-            this._emit('signal', answer)
-          }
+            }
+          })
+          this._emit('signal', this._pc.localDescription)
+        } else {
+          this._emit('signal', answer)
         }
       } else if (data.type === 'answer') {
-        // Only set remote description if we're in the right state
-        if (this._pc.signalingState === 'have-local-offer') {
-          await this._pc.setRemoteDescription(new RTCSessionDescription(data))
+        // Only process answer if we're waiting for one
+        if (this._pc.signalingState !== 'have-local-offer') {
+          console.warn('Ignoring answer in state:', this._pc.signalingState)
+          return
         }
+        
+        await this._pc.setRemoteDescription(new RTCSessionDescription(data))
       } else if (data.type === 'candidate' || data.candidate) {
         const candidate = data.candidate || data
         if (this._pc.remoteDescription) {
-          await this._pc.addIceCandidate(new RTCIceCandidate(candidate))
+          try {
+            await this._pc.addIceCandidate(new RTCIceCandidate(candidate))
+          } catch (err) {
+            // Ignore candidate errors (might be from old connection)
+            console.warn('Failed to add ICE candidate:', err.message)
+          }
         } else {
           this._pendingCandidates.push(candidate)
         }
@@ -166,12 +179,21 @@ export default class DataChannelPeer {
       // Add pending candidates after remote description is set
       if (this._pc.remoteDescription && this._pendingCandidates.length > 0) {
         for (const candidate of this._pendingCandidates) {
-          await this._pc.addIceCandidate(new RTCIceCandidate(candidate))
+          try {
+            await this._pc.addIceCandidate(new RTCIceCandidate(candidate))
+          } catch (err) {
+            console.warn('Failed to add pending ICE candidate:', err.message)
+          }
         }
         this._pendingCandidates = []
       }
     } catch (err) {
-      this._emit('error', err)
+      // Don't emit error for state issues, just log
+      if (err.message.includes('wrong state')) {
+        console.warn('Signal processing skipped due to state:', err.message)
+      } else {
+        this._emit('error', err)
+      }
     }
   }
   
