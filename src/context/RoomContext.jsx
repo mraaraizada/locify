@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react'
 import io from 'socket.io-client'
-import Peer from 'simple-peer'
+import Peer from '../utils/peerWrapper'
 import streamSaver from 'streamsaver'
 import axios from 'axios'
 import { throttle } from 'lodash'
@@ -8,17 +8,6 @@ import toast, { Toaster } from 'react-hot-toast'
 import { getPublicIP } from '../utils/ipDetection'
 import { setupClipboardPaste } from '../utils/clipboardPaste'
 import { getAvatarInfo } from '../utils/avatarGen'
-
-// Polyfill for getUserMedia to prevent errors in data-only peer connections
-if (typeof navigator !== 'undefined' && navigator.mediaDevices === undefined) {
-  navigator.mediaDevices = {}
-}
-
-if (typeof navigator !== 'undefined' && navigator.mediaDevices.getUserMedia === undefined) {
-  navigator.mediaDevices.getUserMedia = function() {
-    return Promise.reject(new Error('getUserMedia is not implemented in this browser'))
-  }
-}
 
 const RoomContext = createContext()
 

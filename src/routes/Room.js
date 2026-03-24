@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
-import Peer from "simple-peer";
+import Peer from "../utils/peerWrapper";
 import axios from 'axios';
 import { WritableStream ,ReadableStream } from 'web-streams-polyfill/ponyfill';
 import streamSaver from "streamsaver";
@@ -20,17 +20,6 @@ import Footer from '../components/footer/index'
 import codec from 'string-codec'
 import { transitions, positions, Provider as AlertProvider,types } from 'react-alert';
 import AlertTemplate from 'react-alert-template-basic';
-
-// Polyfill for getUserMedia to prevent errors in data-only peer connections
-if (typeof navigator !== 'undefined' && navigator.mediaDevices === undefined) {
-    navigator.mediaDevices = {}
-}
-
-if (typeof navigator !== 'undefined' && navigator.mediaDevices.getUserMedia === undefined) {
-    navigator.mediaDevices.getUserMedia = function() {
-        return Promise.reject(new Error('getUserMedia is not implemented in this browser'))
-    }
-}
 
 let worker;
 try {
