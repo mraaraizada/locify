@@ -861,7 +861,6 @@ export const RoomProvider = ({ children }) => {
       peer.on('connect', () => {
         console.log('✓ Peer connected in public room to:', userToSignal)
         setConnectionEstablished(true)
-        toast.success('Connected to peer!')
       })
 
       peer.on('close', () => {
@@ -940,7 +939,6 @@ export const RoomProvider = ({ children }) => {
       peer.on('connect', () => {
         console.log('✓ Peer connected in public room from:', callerID)
         setConnectionEstablished(true)
-        toast.success('Connected to peer!')
       })
 
       peer.on('close', () => {
