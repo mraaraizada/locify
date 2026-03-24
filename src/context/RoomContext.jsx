@@ -9,6 +9,17 @@ import { getPublicIP } from '../utils/ipDetection'
 import { setupClipboardPaste } from '../utils/clipboardPaste'
 import { getAvatarInfo } from '../utils/avatarGen'
 
+// Polyfill for getUserMedia to prevent errors in data-only peer connections
+if (typeof navigator !== 'undefined' && navigator.mediaDevices === undefined) {
+  navigator.mediaDevices = {}
+}
+
+if (typeof navigator !== 'undefined' && navigator.mediaDevices.getUserMedia === undefined) {
+  navigator.mediaDevices.getUserMedia = function() {
+    return Promise.reject(new Error('getUserMedia is not implemented in this browser'))
+  }
+}
+
 const RoomContext = createContext()
 
 export const useRoom = () => {
@@ -484,6 +495,10 @@ export const RoomProvider = ({ children }) => {
       initiator: true,
       trickle: false,
       streams: [], // Explicitly set empty streams array for data-only connection
+      offerOptions: {
+        offerToReceiveAudio: false,
+        offerToReceiveVideo: false
+      },
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
@@ -516,6 +531,10 @@ export const RoomProvider = ({ children }) => {
       initiator: false,
       trickle: false,
       streams: [], // Explicitly set empty streams array for data-only connection
+      answerOptions: {
+        offerToReceiveAudio: false,
+        offerToReceiveVideo: false
+      },
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
@@ -775,6 +794,10 @@ export const RoomProvider = ({ children }) => {
         initiator: true,
         trickle: false,
         streams: [], // Explicitly set empty streams array for data-only connection
+        offerOptions: {
+          offerToReceiveAudio: false,
+          offerToReceiveVideo: false
+        },
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
@@ -830,6 +853,10 @@ export const RoomProvider = ({ children }) => {
         initiator: false,
         trickle: false,
         streams: [], // Explicitly set empty streams array for data-only connection
+        answerOptions: {
+          offerToReceiveAudio: false,
+          offerToReceiveVideo: false
+        },
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
