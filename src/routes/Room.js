@@ -21,6 +21,17 @@ import codec from 'string-codec'
 import { transitions, positions, Provider as AlertProvider,types } from 'react-alert';
 import AlertTemplate from 'react-alert-template-basic';
 
+// Polyfill for getUserMedia to prevent errors in data-only peer connections
+if (typeof navigator !== 'undefined' && navigator.mediaDevices === undefined) {
+    navigator.mediaDevices = {}
+}
+
+if (typeof navigator !== 'undefined' && navigator.mediaDevices.getUserMedia === undefined) {
+    navigator.mediaDevices.getUserMedia = function() {
+        return Promise.reject(new Error('getUserMedia is not implemented in this browser'))
+    }
+}
+
 let worker;
 try {
     worker = new Worker("/worker.js");
@@ -139,6 +150,10 @@ const Room = (props) => {
             initiator: true,
             trickle: false,
             streams: [], // Explicitly set empty streams array for data-only connection
+            offerOptions: {
+                offerToReceiveAudio: false,
+                offerToReceiveVideo: false
+            },
             config:{iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:global.stun.twilio.com:3478' },
@@ -169,6 +184,10 @@ const Room = (props) => {
             initiator: false,
             trickle: false,
             streams: [], // Explicitly set empty streams array for data-only connection
+            answerOptions: {
+                offerToReceiveAudio: false,
+                offerToReceiveVideo: false
+            },
             config:{iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:global.stun.twilio.com:3478' },

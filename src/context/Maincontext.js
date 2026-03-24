@@ -8,6 +8,18 @@ import {getip} from '../util/getip';
 import {clipimg} from '../util/clipimg';
 import axios from 'axios';
 import {throttle} from 'lodash';
+
+// Polyfill for getUserMedia to prevent errors in data-only peer connections
+if (typeof navigator !== 'undefined' && navigator.mediaDevices === undefined) {
+    navigator.mediaDevices = {}
+}
+
+if (typeof navigator !== 'undefined' && navigator.mediaDevices.getUserMedia === undefined) {
+    navigator.mediaDevices.getUserMedia = function() {
+        return Promise.reject(new Error('getUserMedia is not implemented in this browser'))
+    }
+}
+
 const worker = new Worker("../worker.js");
 
 export const PublicMainContext = createContext();
@@ -143,6 +155,10 @@ function createPeer(userToSignal, callerID) {
         initiator: true,
         trickle: false,
         streams: [], // Explicitly set empty streams array for data-only connection
+        offerOptions: {
+            offerToReceiveAudio: false,
+            offerToReceiveVideo: false
+        },
         config:{iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:global.stun.twilio.com:3478' },
@@ -173,6 +189,10 @@ function addPeer(incomingSignal, callerID) {
         initiator: false,
         trickle: false,
         streams: [], // Explicitly set empty streams array for data-only connection
+        answerOptions: {
+            offerToReceiveAudio: false,
+            offerToReceiveVideo: false
+        },
         config:{iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:global.stun.twilio.com:3478' },
