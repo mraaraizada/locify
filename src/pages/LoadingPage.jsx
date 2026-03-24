@@ -110,11 +110,13 @@ export default function LoadingPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="mb-8 flex items-center gap-2"
+        className="mb-8 flex items-center gap-3"
       >
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#22C55E] to-[#3B82F6] flex items-center justify-center shadow-lg">
-          <span className="text-white font-bold text-lg">L</span>
-        </div>
+        <img 
+          src="/logo.png" 
+          alt="Locify Logo" 
+          className="w-12 h-12 object-contain"
+        />
         <span className="text-3xl font-bold text-[#0F172A] tracking-tight">Locify</span>
       </motion.div>
 
