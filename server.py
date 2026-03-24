@@ -335,7 +335,8 @@ def handle_returning_signal(data):
 
 # Run server
 if __name__ == '__main__':
-    port = int(os.getenv('BACKEND_PORT', 8000))
+    # Render uses PORT env variable, fallback to BACKEND_PORT or 8000
+    port = int(os.getenv('PORT', os.getenv('BACKEND_PORT', 8000)))
     print(f'\n{"="*50}')
     print(f'🚀 Locify Python Backend Server')
     print(f'{"="*50}')
