@@ -12,25 +12,53 @@
     
     <!-- Polyfill for getUserMedia - MUST load before any modules -->
     <script>
-      // Polyfill for getUserMedia to prevent errors in data-only peer connections
-      if (typeof navigator !== 'undefined') {
+      // Comprehensive polyfill for getUserMedia to prevent errors in data-only peer connections
+      (function() {
+        if (typeof navigator === 'undefined') return;
+        
+        // Create a mock getUserMedia that returns a rejected promise
+        var mockGetUserMedia = function(constraints) {
+          return Promise.reject(new Error('getUserMedia is not available'));
+        };
+        
+        // Ensure navigator.mediaDevices exists
         if (!navigator.mediaDevices) {
           navigator.mediaDevices = {};
         }
         
+        // Set getUserMedia on mediaDevices
         if (!navigator.mediaDevices.getUserMedia) {
-          navigator.mediaDevices.getUserMedia = function() {
-            return Promise.reject(new Error('getUserMedia is not implemented'));
+          navigator.mediaDevices.getUserMedia = mockGetUserMedia;
+        }
+        
+        // Also set the older prefixed versions
+        if (!navigator.getUserMedia) {
+          navigator.getUserMedia = mockGetUserMedia;
+        }
+        if (!navigator.webkitGetUserMedia) {
+          navigator.webkitGetUserMedia = mockGetUserMedia;
+        }
+        if (!navigator.mozGetUserMedia) {
+          navigator.mozGetUserMedia = mockGetUserMedia;
+        }
+        if (!navigator.msGetUserMedia) {
+          navigator.msGetUserMedia = mockGetUserMedia;
+        }
+        
+        // Ensure enumerateDevices exists
+        if (!navigator.mediaDevices.enumerateDevices) {
+          navigator.mediaDevices.enumerateDevices = function() {
+            return Promise.resolve([]);
           };
         }
         
-        // Also polyfill the older API
-        if (!navigator.getUserMedia) {
-          navigator.getUserMedia = function() {
-            return Promise.reject(new Error('getUserMedia is not implemented'));
+        // Ensure getSupportedConstraints exists
+        if (!navigator.mediaDevices.getSupportedConstraints) {
+          navigator.mediaDevices.getSupportedConstraints = function() {
+            return {};
           };
         }
-      }
+      })();
     </script>
   </head>
   <body>

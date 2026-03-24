@@ -494,17 +494,17 @@ export const RoomProvider = ({ children }) => {
     const peer = new Peer({
       initiator: true,
       trickle: false,
-      streams: [], // Explicitly set empty streams array for data-only connection
-      offerOptions: {
-        offerToReceiveAudio: false,
-        offerToReceiveVideo: false
-      },
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:global.stun.twilio.com:3478' },
           { urls: 'stun:stun.services.mozilla.com' },
         ]
+      },
+      channelConfig: {},
+      offerOptions: {
+        offerToReceiveAudio: false,
+        offerToReceiveVideo: false
       }
     })
 
@@ -530,17 +530,17 @@ export const RoomProvider = ({ children }) => {
     const peer = new Peer({
       initiator: false,
       trickle: false,
-      streams: [], // Explicitly set empty streams array for data-only connection
-      answerOptions: {
-        offerToReceiveAudio: false,
-        offerToReceiveVideo: false
-      },
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:global.stun.twilio.com:3478' },
           { urls: 'stun:stun.services.mozilla.com' },
         ]
+      },
+      channelConfig: {},
+      answerOptions: {
+        offerToReceiveAudio: false,
+        offerToReceiveVideo: false
       }
     })
 
@@ -793,17 +793,17 @@ export const RoomProvider = ({ children }) => {
       const peer = new Peer({
         initiator: true,
         trickle: false,
-        streams: [], // Explicitly set empty streams array for data-only connection
-        offerOptions: {
-          offerToReceiveAudio: false,
-          offerToReceiveVideo: false
-        },
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:global.stun.twilio.com:3478' },
             { urls: 'stun:stun.services.mozilla.com' },
           ]
+        },
+        channelConfig: {},
+        offerOptions: {
+          offerToReceiveAudio: false,
+          offerToReceiveVideo: false
         }
       })
 
@@ -852,17 +852,17 @@ export const RoomProvider = ({ children }) => {
       const peer = new Peer({
         initiator: false,
         trickle: false,
-        streams: [], // Explicitly set empty streams array for data-only connection
-        answerOptions: {
-          offerToReceiveAudio: false,
-          offerToReceiveVideo: false
-        },
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:global.stun.twilio.com:3478' },
             { urls: 'stun:stun.services.mozilla.com' },
           ]
+        },
+        channelConfig: {},
+        answerOptions: {
+          offerToReceiveAudio: false,
+          offerToReceiveVideo: false
         }
       })
 
