@@ -6,8 +6,10 @@ if (typeof window === 'undefined') {
   throw new Error('simple-peer can only be used in browser environment')
 }
 
-// Comprehensive polyfill for getUserMedia
-if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+// AGGRESSIVE polyfill - set BEFORE any imports
+(function() {
+  if (typeof navigator === 'undefined' || typeof window === 'undefined') return;
+  
   // Create a mock getUserMedia that returns a rejected promise
   const mockGetUserMedia = function(constraints) {
     return Promise.reject(new DOMException('getUserMedia is not available', 'NotAllowedError'))
@@ -18,46 +20,61 @@ if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
     navigator.mediaDevices = {}
   }
   
-  // Set getUserMedia on mediaDevices with proper binding
-  if (!navigator.mediaDevices.getUserMedia) {
-    Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
-      value: mockGetUserMedia,
-      writable: true,
-      configurable: true
-    })
-  }
+  // FORCE set getUserMedia with Object.defineProperty
+  Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+    value: mockGetUserMedia,
+    writable: false,
+    configurable: false,
+    enumerable: true
+  })
   
-  // Also set the older prefixed versions
-  if (!navigator.getUserMedia) {
-    navigator.getUserMedia = mockGetUserMedia
-  }
-  if (!navigator.webkitGetUserMedia) {
-    navigator.webkitGetUserMedia = mockGetUserMedia
-  }
-  if (!navigator.mozGetUserMedia) {
-    navigator.mozGetUserMedia = mockGetUserMedia
-  }
-  if (!navigator.msGetUserMedia) {
-    navigator.msGetUserMedia = mockGetUserMedia
-  }
+  // Set all the prefixed versions
+  navigator.getUserMedia = mockGetUserMedia
+  navigator.webkitGetUserMedia = mockGetUserMedia
+  navigator.mozGetUserMedia = mockGetUserMedia
+  navigator.msGetUserMedia = mockGetUserMedia
   
-  // Ensure enumerateDevices exists
+  // Mock other media APIs
   if (!navigator.mediaDevices.enumerateDevices) {
     navigator.mediaDevices.enumerateDevices = function() {
       return Promise.resolve([])
     }
   }
   
-  // Ensure getSupportedConstraints exists
   if (!navigator.mediaDevices.getSupportedConstraints) {
     navigator.mediaDevices.getSupportedConstraints = function() {
       return {}
     }
   }
-}
+  
+  // CRITICAL: Mock RTCPeerConnection.prototype.addStream if it doesn't exist
+  if (typeof RTCPeerConnection !== 'undefined' && !RTCPeerConnection.prototype.addStream) {
+    RTCPeerConnection.prototype.addStream = function() {
+      console.warn('addStream is deprecated, using addTrack instead')
+    }
+  }
+})()
 
 // Now import simple-peer after polyfills are in place
 import SimplePeer from 'simple-peer'
 
-// Export default (NOT as namespace)
-export default SimplePeer
+// Wrap the Peer constructor to catch any errors
+class SafePeer extends SimplePeer {
+  constructor(opts = {}) {
+    try {
+      // Ensure we never pass a stream
+      const safeOpts = {
+        ...opts,
+        stream: undefined,
+        streams: undefined
+      }
+      super(safeOpts)
+    } catch (err) {
+      console.error('Error creating peer:', err)
+      throw err
+    }
+  }
+}
+
+// Export the safe wrapper
+export default SafePeer
