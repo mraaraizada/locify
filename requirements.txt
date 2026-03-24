@@ -6,9 +6,9 @@ Flask-CORS==4.0.0
 Werkzeug==3.0.1
 
 # WebSocket Support
-Flask-SocketIO==5.3.6
-python-socketio==5.11.0
-python-engineio==4.9.0
+Flask-SocketIO==5.4.1
+python-socketio==5.11.4
+python-engineio==4.10.1
 
 # Production WSGI Server
 gunicorn==21.2.0

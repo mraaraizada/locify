@@ -11,7 +11,7 @@ export default defineConfig({
     alias: {
       process: 'process/browser',
       buffer: 'buffer',
-      util: 'util',
+      util: 'util/',
     },
   },
   optimizeDeps: {
@@ -21,5 +21,10 @@ export default defineConfig({
       },
     },
     include: ['buffer', 'process', 'util'],
+  },
+  build: {
+    rollupOptions: {
+      external: [],
+    },
   },
 })
