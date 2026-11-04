@@ -1,189 +1,268 @@
-# Locify - Modern P2P File Sharing
+# Locify
 
-A modern, redesigned version of the Vegh file sharing application with Vite, React 18, and Tailwind CSS.
+<div align="center">
+  <img src="public/logo.png" alt="Locify Logo" width="200"/>
+</div>
 
-## Features
+## About The Project
 
-- ✅ Modern UI with Tailwind CSS and Framer Motion animations
-- ✅ P2P file transfer using WebRTC
-- ✅ Real-time connections with Socket.IO
-- ✅ Private rooms (2 users max)
-- ✅ No file size limits
-- ✅ End-to-end encrypted transfers
-- ✅ Dark mode support
-- ✅ Responsive design
+Locify is a modern, secure peer-to-peer file sharing application that enables direct file transfers between users without uploading to any server. Built with WebRTC technology, it provides fast, encrypted, and unlimited file sharing capabilities through your browser.
 
-## Tech Stack
+Unlike traditional file sharing services, Locify establishes direct connections between peers, ensuring your files never touch a server. This means faster transfers, complete privacy, and no file size restrictions.
+
+### Key Features
+
+- ** Unlimited File Size** - Transfer files of any size without restrictions
+- ** End-to-End Encrypted** - Direct P2P connections ensure complete privacy
+- ** Lightning Fast** - WebRTC technology for maximum transfer speeds
+- ** Modern UI** - Beautiful, responsive interface with dark mode support
+- ** Multi-User Support** - Share with up to 5 users simultaneously in public rooms
+- ** Cross-Platform** - Works on desktop and mobile browsers
+- ** Easy Sharing** - Simple room codes and QR codes for quick access
+- ** Anonymous Avatars** - Fun, randomly generated animal avatars for each user
+- ** Real-Time Progress** - Live transfer status and speed indicators
+- ** No Installation** - Works directly in your browser
+
+## Built With
 
 ### Frontend
-- React 18.3.1
-- Vite (fast build tool)
-- Tailwind CSS (styling)
-- Framer Motion (animations)
-- React Router v6 (routing)
-- Socket.IO Client (WebSocket)
-- simple-peer (WebRTC)
-- react-dropzone (file uploads)
+- **[React 18](https://react.dev/)** - Modern UI library
+- **[Vite](https://vitejs.dev/)** - Next-generation frontend tooling
+- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
+- **[Framer Motion](https://www.framer.com/motion/)** - Production-ready animation library
+- **[React Router v6](https://reactrouter.com/)** - Client-side routing
+- **[Socket.IO Client](https://socket.io/)** - Real-time bidirectional communication
+- **[simple-peer](https://github.com/feross/simple-peer)** - WebRTC wrapper for P2P connections
+- **[react-dropzone](https://react-dropzone.js.org/)** - Drag-and-drop file uploads
+- **[QRCode.react](https://www.npmjs.com/package/qrcode.react)** - QR code generation
+- **[Lucide React](https://lucide.dev/)** - Beautiful icon library
 
 ### Backend
-- Python Flask (from root project)
-- Flask-SocketIO
-- See root `server.py`
+- **[Python Flask](https://flask.palletsprojects.com/)** - Lightweight web framework
+- **[Flask-SocketIO](https://flask-socketio.readthedocs.io/)** - WebSocket support for Flask
+- **[Flask-CORS](https://flask-cors.readthedocs.io/)** - Cross-origin resource sharing
+- **[MongoDB](https://www.mongodb.com/)** (Optional) - Transfer logging and analytics
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** (v16 or higher) - [Download](https://nodejs.org/)
+- **npm** or **yarn** - Comes with Node.js
+- **Python** (v3.8 or higher) - [Download](https://www.python.org/)
+- **pip** - Python package manager (comes with Python)
 
 ## Installation
 
-### 1. Install Dependencies
+### 1. Clone the Repository
 
 ```bash
-cd orchids-use-the-attached-main/orchids-use-the-attached-main
+git clone https://github.com/yourusername/locify.git
+cd locify
+```
+
+### 2. Install Frontend Dependencies
+
+```bash
 npm install
 ```
 
-### 2. Configure Environment
+### 3. Install Backend Dependencies
 
-The `.env` file is already configured:
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure Environment Variables
+
+Create a `.env` file in the root directory:
 
 ```env
+# Development
 VITE_SOCKET_URL=http://localhost:8000
 ```
 
-## Running the Application
+For production, use `.env.production`:
 
-### Start Backend (from root folder)
-
-```bash
-# Go to root folder
-cd ../..
-
-# Start Python backend
-python server.py
+```env
+# Production
+VITE_SOCKET_URL=https://your-backend-url.com
 ```
 
-Backend runs on: `http://localhost:8000`
+Backend environment variables (optional):
 
-### Start Frontend (in this folder)
-
-```bash
-# In orchids folder
-npm run dev
+```env
+ADMIN_COOKIE_PASS=your-secret-key
+MONGO_URL=your-mongodb-connection-string  # or 'test' to disable
+BACKEND_PORT=8000
 ```
-
-Frontend runs on: `http://localhost:5173` (Vite default)
 
 ## Usage
 
-1. Open `http://localhost:5173` in your browser
-2. Click "Get Started" or navigate to `/dashboard`
-3. Create a new room or join an existing one
-4. Share the room link with someone
-5. Once connected, drag and drop files to send!
+### Development Mode
+
+#### 1. Start the Backend Server
+
+```bash
+python server.py
+```
+
+The backend will start on `http://localhost:8000`
+
+#### 2. Start the Frontend Development Server
+
+In a new terminal:
+
+```bash
+npm run dev
+```
+
+The frontend will start on `http://localhost:5173`
+
+#### 3. Access the Application
+
+Open your browser and navigate to `http://localhost:5173`
+
+### Production Build
+
+```bash
+# Build the frontend
+npm run build
+
+# Preview the production build
+npm run preview
+```
+
+### How to Share Files
+
+1. **Create a Room**
+   - Click "Get Started" on the landing page
+   - Choose "Create Private Room" (2 users) or "Create Public Room" (up to 5 users)
+   - You'll receive a unique room code
+
+2. **Share the Room**
+   - Share the room link or QR code with recipients
+   - Or share the room code for manual entry
+
+3. **Transfer Files**
+   - Once connected, drag and drop files into the transfer area
+   - Or click to browse and select files
+   - Watch real-time transfer progress
+   - Recipients can download files as they arrive
 
 ## Project Structure
 
 ```
-orchids-use-the-attached-main/
-├── src/
-│   ├── context/
-│   │   └── RoomContext.jsx      # WebRTC & Socket.IO logic
-│   ├── pages/
-│   │   ├── LoadingPage.jsx      # Landing page
-│   │   ├── HomePage.jsx         # Marketing page
-│   │   ├── Dashboard.jsx        # Create/Join room
-│   │   └── Room.jsx             # File transfer room
-│   ├── App.jsx                  # Main app component
-│   ├── main.jsx                 # Entry point
-│   └── index.css                # Tailwind styles
+locify/
 ├── public/
-│   └── worker.js                # Web Worker for file assembly
-├── .env                         # Environment variables
-├── package.json                 # Dependencies
-├── vite.config.js               # Vite configuration
-└── tailwind.config.js           # Tailwind configuration
+│   ├── logo.png              # Application logo
+│   ├── worker.js             # Web Worker for file assembly
+│   ├── manifest.json         # PWA manifest
+│   └── robots.txt            # SEO configuration
+├── src/
+│   ├── assets/
+│   │   └── avatars/          # 51 unique animal avatars
+│   ├── components/
+│   │   ├── avatar/           # Avatar display component
+│   │   ├── avatarSelector/   # Avatar selection UI
+│   │   ├── filedropper/      # File upload dropzone
+│   │   ├── filemodal/        # File transfer modal
+│   │   ├── qrcode/           # QR code generator
+│   │   ├── SocialSharing/    # Share functionality
+│   │   └── ...               # Other UI components
+│   ├── context/
+│   │   ├── RoomContext.jsx   # WebRTC & Socket.IO logic
+│   │   └── Maincontext.jsx   # Global state management
+│   ├── pages/
+│   │   ├── LoadingPage.jsx   # Landing page
+│   │   ├── HomePage.jsx      # Marketing page
+│   │   ├── Dashboard.jsx     # Room creation/joining
+│   │   ├── Room.jsx          # Private room (2 users)
+│   │   └── PublicRoom.jsx    # Public room (5 users)
+│   ├── routes/               # Legacy route components
+│   ├── App.jsx               # Main application component
+│   ├── main.jsx              # Application entry point
+│   └── index.css             # Global styles with Tailwind
+├── server.py                 # Python Flask backend
+├── requirements.txt          # Python dependencies
+├── package.json              # Node.js dependencies
+├── vite.config.js            # Vite configuration
+├── tailwind.config.js        # Tailwind CSS configuration
+├── postcss.config.js         # PostCSS configuration
+├── render.yaml               # Render deployment config
+└── .env                      # Environment variables
 ```
 
-## Key Components
+## Features in Detail
 
-### RoomContext
-Manages WebRTC connections, Socket.IO events, and file transfers. Provides:
-- `connectionEstablished` - Connection status
-- `users` - Connected users
-- `sendFile()` - Send file to peer
-- `joinRoom()` - Join a room
-- `leaveRoom()` - Leave room
+### WebRTC Peer-to-Peer Technology
 
-### Room Page
-Main file transfer interface with:
-- Drag & drop file upload
-- Real-time transfer progress
-- User avatars
-- Connection status
-- Received files list
+Locify uses WebRTC (Web Real-Time Communication) to establish direct connections between users:
 
-### Dashboard
-Room creation and joining interface
+- **Direct Transfer**: Files go directly from sender to receiver
+- **No Server Storage**: Your files never touch our servers
+- **Maximum Speed**: Limited only by your internet connection
+- **Complete Privacy**: End-to-end encrypted by default
 
-## Differences from Original
+### Room Types
 
-| Feature | Original | Orchids |
-|---------|----------|---------|
-| Build Tool | Create React App | Vite |
-| React Version | 16.13.1 | 18.3.1 |
-| Styling | Custom CSS/SCSS | Tailwind CSS |
-| Animations | Basic | Framer Motion |
-| Router | v5 | v6 |
-| UI Design | Functional | Modern & Polished |
+**Private Rooms** (2 users max)
+- Perfect for one-on-one file sharing
+- Simple and secure
+- Ideal for sensitive documents
 
-## Development
+**Public Rooms** (5 users max)
+- Share with multiple people simultaneously
+- Great for team collaboration
+- Everyone can send and receive files
 
-```bash
-# Start dev server with hot reload
-npm run dev
+### Real-Time Features
 
-# Build for production
-npm run build
+- **Live Connection Status**: See when users join or leave
+- **Transfer Progress**: Real-time progress bars and speed indicators
+- **User Presence**: Visual indicators for connected users
+- **Instant Notifications**: Toast notifications for all events
 
-# Preview production build
-npm run preview
-```
+### Security & Privacy
 
-## Environment Variables
+- **No File Storage**: Files are never stored on servers
+- **Direct Connections**: P2P technology ensures privacy
+- **Temporary Rooms**: Rooms are destroyed when empty
+- **Anonymous by Default**: No account or personal info required
 
-- `VITE_SOCKET_URL` - Backend Socket.IO URL (default: http://localhost:8000)
+### User Experience
 
-## Troubleshooting
+- **Drag & Drop**: Intuitive file upload interface
+- **Dark Mode**: Easy on the eyes for night owls
+- **Responsive Design**: Works on all screen sizes
+- **Smooth Animations**: Polished UI with Framer Motion
+- **QR Code Sharing**: Quick room access via QR codes
 
-### Port Already in Use
-If port 5173 is in use, Vite will automatically use the next available port.
+## API Endpoints
 
-### Connection Failed
-1. Ensure backend is running on port 8000
-2. Check `.env` file has correct `VITE_SOCKET_URL`
-3. Clear browser cache and refresh
+### REST API
 
-### Module Not Found
-```bash
-npm install
-```
+- `GET /` - Health check and server status
+- `POST /log` - Log file transfer data
+- `GET /datasum` - Get total data transferred
+- `GET /countUsers` - Get total number of users
+- `GET /dataLog` - Get all transfer logs
 
-### WebRTC Connection Issues
-- Check firewall settings
-- Ensure both users are on same network or use STUN servers
-- Check browser console for errors
+### Socket.IO Events
 
-## Browser Support
+**Client → Server**
+- `join room` - Join a private room
+- `join room using ip` - Join a public room
+- `sending signal` - Send WebRTC offer
+- `returning signal` - Send WebRTC answer
 
-- Chrome/Edge (recommended)
-- Firefox
-- Safari
-- Any modern browser with WebRTC support
+**Server → Client**
+- `all users` - List of users in room
+- `usernames` - User avatar assignments
+- `user joined` - New user connected
+- `user left` - User disconnected
+- `room full` - Room capacity reached
 
 ## License
 
-MIT License
-
-## Credits
-
-- Original Vegh project
-- Modern redesign with Tailwind CSS
-- WebRTC technology
-- Socket.IO for signaling
+Distributed under the MIT License. See `LICENSE` for more information.
